@@ -8,16 +8,18 @@ TODO:
     - implement algorithm
 '''
 import csv
-from nltk.stem.porter import *
 import nltk
 import re
-import codecs
 import unicodedata
 import pandas as pd
 import math
+from string import digits
+from nltk.corpus import stopwords
+from autocorrect import spell
+
 #for the first run, uncomment the line below
-#nltk.download('stopwords')
-stemmer = PorterStemmer()
+nltk.download('stopwords')
+stemmer = nltk.PorterStemmer()
 
 def readfile(file):
     #put the csv file in a dict with key = ID, value = [insult,comment]
@@ -41,14 +43,20 @@ def readfile(file):
 def preprocess(comment):
     #preprocess words: tokenize and stem according to english
     comment = comment.replace('\\\\','\\')
+    comment = comment.replace('\\xc2\\xa0',' ')
+    comment = comment.replace('\\xa0',' ')
     newcomment = unicodedata.normalize('NFKD', comment).encode('ascii', 'ignore')
     newcomment = newcomment.decode('unicode-escape','ignore')
     newcomment = newcomment.encode('ascii','ignore')
     newcomment = newcomment.decode('ascii','ignore')
-    words = " ".join(newcomment.split())
+    remove_digits = str.maketrans('', '', digits)
+    res = newcomment.translate(remove_digits)
+    words = " ".join(res.split())
     words = words.split(" ")
+    filtered_words = [word for word in words if word not in stopwords.words('english')]
+
     cleanedcomment = []
-    for word in words:
+    for word in filtered_words:
         cleanedword = str(re.sub('\W+','', word))
         stemmedword = stemmer.stem(cleanedword).lower()
         if stemmedword != '':
@@ -133,7 +141,9 @@ def main():
     tfdict = make_tfcounts(trainingDict,setOfWords)
     dfdict = make_dfcounts(trainingDict,setOfWords)
     tfidfdict = make_tfidf(tfdict,dfdict)
-    make_dataframe_and_save(tfidfdict)
+    ##turn the make_dataframe_and_save function back on if testing phase is successful!!!
+    #make_dataframe_and_save(tfidfdict)
+    ##ignore get_bestword below, as it is only for testing the tfidf output (R/MatLab for better analyses)
     #get_bestword(tfidfdict)
     testDict = readfile(testdatafile)
     
