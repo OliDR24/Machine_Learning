@@ -27,7 +27,7 @@ def readfile(file):
     setOfWords = set()
     with open(file,'r') as f:
         csvfile = csv.DictReader(f,delimiter=",",quotechar='\"')
-        ID = 1
+        ID = 0
         for row in csvfile:
             insult = row['Insult']
             comment = row['Comment']
@@ -58,7 +58,8 @@ def preprocess(comment):
     cleanedcomment = []
     for word in filtered_words:
         cleanedword = str(re.sub('\W+','', word))
-        stemmedword = stemmer.stem(cleanedword).lower()
+        correctedword = spell(cleanedword)
+        stemmedword = stemmer.stem(correctedword).lower()
         if stemmedword != '':
             cleanedcomment.append(stemmedword)
     return cleanedcomment
